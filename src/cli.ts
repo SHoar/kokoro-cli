@@ -12,10 +12,12 @@ import {
   defaultCacheDir,
   encodeWav,
   listVoices,
+  removeTempFiles,
   resolveVoice,
   speak,
   stopPlayback,
   synthesize,
+  unloadModels,
   type DownloadProgress,
   type ModelDtype,
   type SpeakOptions,
@@ -64,9 +66,11 @@ function version(): string {
   return pkg.version;
 }
 
+/** An error whose message is shown to the user as it is. */
+class CliError extends Error {}
+
 function fail(message: string): never {
-  process.stderr.write(`kokoro-cli: ${message}\n`);
-  process.exit(1);
+  throw new CliError(message);
 }
 
 async function readStdin(): Promise<string> {
@@ -111,7 +115,8 @@ function downloadReporter(quiet: boolean): { onProgress: (p: DownloadProgress) =
   };
 }
 
-async function main(): Promise<void> {
+/** Runs the command and returns the exit code. */
+async function main(): Promise<number> {
   let parsed;
   try {
     parsed = parseArgs({
@@ -135,9 +140,18 @@ async function main(): Promise<void> {
   }
   const { values, positionals } = parsed;
 
-  if (values.help) return void process.stdout.write(HELP);
-  if (values.version) return void process.stdout.write(version() + "\n");
-  if (values.voices) return printVoices();
+  if (values.help) {
+    process.stdout.write(HELP);
+    return 0;
+  }
+  if (values.version) {
+    process.stdout.write(version() + "\n");
+    return 0;
+  }
+  if (values.voices) {
+    printVoices();
+    return 0;
+  }
 
   if (values.file !== undefined && positionals.length > 0) {
     fail("Give either a phrase or --file, not both.");
@@ -160,7 +174,7 @@ async function main(): Promise<void> {
   text = text.trim();
   if (!text) {
     process.stderr.write(HELP);
-    process.exit(1);
+    return 1;
   }
 
   const output = values.output === undefined ? undefined : resolve(values.output);
@@ -195,7 +209,11 @@ async function main(): Promise<void> {
 
   process.once("SIGINT", () => {
     stopPlayback();
-    process.exit(130);
+    removeTempFiles();
+    // End through the signal itself. process.exit() here would run ONNX Runtime's
+    // teardown in the middle of its work, which aborts on macOS.
+    finished = true;
+    process.kill(process.pid, "SIGINT");
   });
 
   const save = async (samples: Float32Array, sampleRate: number, file: string) => {
@@ -226,6 +244,7 @@ async function main(): Promise<void> {
     reporter.done();
     fail(describe(err, options));
   }
+  return 0;
 }
 
 function describe(err: unknown, options: SpeakOptions): string {
@@ -242,15 +261,37 @@ function describe(err: unknown, options: SpeakOptions): string {
   return message;
 }
 
+let finished = false;
+
+/**
+ * Ends the process without process.exit(): the model is released first and the event
+ * loop is left to drain. A hard exit while ONNX Runtime sessions are alive aborts on
+ * macOS with "mutex lock failed: Invalid argument".
+ */
+async function shutdown(code: number): Promise<void> {
+  finished = true;
+  process.exitCode = code;
+  await unloadModels();
+  // Safety net only: if something still holds the event loop open, do not hang.
+  setTimeout(() => process.exit(code), 3000).unref();
+}
+
+function report(err: unknown): void {
+  const message = err instanceof Error ? err.message : String(err);
+  process.stderr.write(`kokoro-cli: ${message}\n`);
+}
+
 // The espeak phonemizer inside kokoro-js installs handlers that rethrow any stray error
 // together with a megabyte of minified source. Replace them with a one-line report.
 for (const event of ["uncaughtException", "unhandledRejection"] as const) {
   process.removeAllListeners(event);
-  process.on(event, (err: unknown) => fail(err instanceof Error ? err.message : String(err)));
+  process.on(event, (err: unknown) => {
+    report(err);
+    void shutdown(1);
+  });
 }
 
-// Never exit quietly with success if the work was cut short.
-let finished = false;
+// Never end quietly with success if the work was cut short.
 process.on("exit", (code) => {
   if (!finished && code === 0) {
     process.stderr.write("kokoro-cli: stopped before the speech was finished.\n");
@@ -258,11 +299,10 @@ process.on("exit", (code) => {
   }
 });
 
-// onnxruntime keeps native handles open, so exit explicitly once the work is done.
 main().then(
-  () => {
-    finished = true;
-    process.exit(0);
+  (code) => shutdown(code),
+  (err) => {
+    report(err);
+    return shutdown(1);
   },
-  (err) => fail(err instanceof Error ? err.message : String(err)),
 );

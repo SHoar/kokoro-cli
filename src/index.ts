@@ -153,6 +153,31 @@ export function loadModel(options: LoadOptions = {}): Promise<KokoroTTS> {
 }
 
 /**
+ * Release the loaded model and its ONNX Runtime sessions.
+ * Call this before the process ends: on macOS, ending the process while a session is
+ * still alive makes ONNX Runtime abort with "mutex lock failed: Invalid argument".
+ */
+export async function unloadModels(): Promise<void> {
+  const pending = [...loaded.values()];
+  loaded.clear();
+  for (const p of pending) {
+    try {
+      await (await p).model.dispose();
+    } catch {
+      // The model never finished loading or is already released.
+    }
+  }
+}
+
+const tempDirs = new Set<string>();
+
+/** Remove the temporary audio files of a speak() call that is still in progress. */
+export function removeTempFiles(): void {
+  for (const dir of tempDirs) rmSync(dir, { recursive: true, force: true });
+  tempDirs.clear();
+}
+
+/**
  * Generate speech sentence by sentence. Each chunk is yielded as soon as it is ready,
  * so playback can start before long texts have finished generating.
  */
@@ -208,6 +233,7 @@ export async function speak(
 ): Promise<void> {
   const dir = await mkdtemp(join(tmpdir(), "kokoro-cli-"));
   // Also clean up if the process is ended early (Ctrl+C) while we are speaking.
+  tempDirs.add(dir);
   const removeOnExit = () => rmSync(dir, { recursive: true, force: true });
   process.once("exit", removeOnExit);
   let playback: Promise<void> = Promise.resolve();
@@ -232,6 +258,7 @@ export async function speak(
   } finally {
     await playback;
     process.off("exit", removeOnExit);
+    tempDirs.delete(dir);
     await rm(dir, { recursive: true, force: true });
   }
 }
