@@ -10,9 +10,9 @@ npx kokoro-cli Hello from Kokoro
 
 ## Demo
 
-[![kokoro-cli in a terminal](https://raw.githubusercontent.com/arsensalmanov/kokoro-cli/main/media/demo.gif)](https://github.com/arsensalmanov/kokoro-cli/raw/main/media/demo.mp4)
+[![kokoro-cli in a terminal](https://raw.githubusercontent.com/arsensalmanov/kokoro-cli/main/media/demo.gif)](https://github.com/arsensalmanov/kokoro-cli/blob/main/media/demo.mp4)
 
-The image has no sound. [Play the video with sound.](https://github.com/arsensalmanov/kokoro-cli/raw/main/media/demo.mp4)
+The image has no sound. [Play the video with sound.](https://github.com/arsensalmanov/kokoro-cli/blob/main/media/demo.mp4)
 
 ## Requirements
 
