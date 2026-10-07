@@ -166,6 +166,52 @@ console.log(listVoices());
 
 The package is an ES module.
 
+## Make a narrated video
+
+The package contains a script that makes an explainer video from a JSON file.
+`kokoro-cli` speaks the narration. The script draws the pictures and joins them with the sound.
+
+The script needs `ffmpeg`, a Chromium browser through Playwright, and two font packages.
+
+1. Install the packages in an empty folder:
+
+   ```sh
+   npm init -y
+   npm install kokoro-cli playwright @fontsource/inter @fontsource/jetbrains-mono
+   npx playwright install chromium
+   ```
+
+2. Copy the example file and change its text:
+
+   ```sh
+   cp node_modules/kokoro-cli/examples/explainer/scenes.example.json scenes.json
+   ```
+
+3. Make one image for each scene and examine the images:
+
+   ```sh
+   node node_modules/kokoro-cli/examples/explainer/explainer.mjs scenes.json out.mp4 --stills
+   ```
+
+4. Make the video:
+
+   ```sh
+   node node_modules/kokoro-cli/examples/explainer/explainer.mjs scenes.json out.mp4
+   ```
+
+Each scene has a `type` and a `say` text. The `say` text is the narration.
+
+| Type       | Other fields                                                      |
+| ---------- | ----------------------------------------------------------------- |
+| `title`    | `kicker`, `title`, `subtitle`                                     |
+| `points`   | `kicker`, `title`, `points` (a list of text lines)                |
+| `terminal` | `kicker`, `title`, `subtitle`, `lines` (each has `cmd` or `out`)  |
+| `code`     | `kicker`, `title`, `code`                                         |
+| `end`      | `title`, `subtitle`                                               |
+
+The top level of the file can set `voice`, `speed`, `accent` (a color) and `footer`.
+A scene can set its own `voice` and `speed`.
+
 ## Development
 
 ```sh

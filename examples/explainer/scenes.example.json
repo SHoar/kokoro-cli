@@ -1,0 +1,50 @@
+{
+  "voice": "heart",
+  "accent": "#7c3aed",
+  "footer": "github.com/arsensalmanov/kokoro-cli",
+  "scenes": [
+    {
+      "type": "title",
+      "kicker": "In one minute",
+      "title": "How kokoro-cli speaks",
+      "subtitle": "Text to speech that stays on your computer",
+      "say": "This is how kokoro C L I turns text into speech, without sending your text anywhere."
+    },
+    {
+      "type": "points",
+      "kicker": "The idea",
+      "title": "Three steps, all local",
+      "points": [
+        "Split the text into sentences",
+        "Turn each sentence into sounds",
+        "Play each sentence as soon as it is ready"
+      ],
+      "say": "First, the text is split into sentences. Then the Kokoro model turns each sentence into sound. Finally, each sentence plays as soon as it is ready."
+    },
+    {
+      "type": "terminal",
+      "kicker": "Try it",
+      "title": "One command",
+      "subtitle": "Write the phrase after the command.",
+      "lines": [
+        { "cmd": "npx kokoro-cli -v george \"Good evening.\"" },
+        { "cmd": "npx kokoro-cli -o hello.wav Hello there" },
+        { "out": "Saved 1.4s of speech to hello.wav" }
+      ],
+      "say": "To try it, run one command. Add dash v to pick a voice, or dash o to save a file."
+    },
+    {
+      "type": "code",
+      "kicker": "In your code",
+      "title": "Or call it from Node",
+      "code": "import { speak, saveSpeech } from \"kokoro-cli\";\n\n// Play the speech.\nawait speak(\"Hello from Kokoro\", { voice: \"bella\" });\n\n// Save the speech to a file.\nawait saveSpeech(\"Save this text.\", \"out.wav\");",
+      "say": "You can also call it from your own code, to play speech or save it to a file."
+    },
+    {
+      "type": "end",
+      "title": "npx kokoro-cli",
+      "subtitle": "No API key. No server.",
+      "say": "That is all. No key, and no server."
+    }
+  ]
+}
