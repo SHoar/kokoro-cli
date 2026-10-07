@@ -26,6 +26,9 @@ The first command downloads the model (approximately 92 MB) from Hugging Face.
 The tool keeps the model in a cache folder.
 After the download, the tool operates without an internet connection.
 
+If the tool cannot connect to Hugging Face, it downloads the same model from the [GitHub releases](https://github.com/arsensalmanov/kokoro-cli/releases/tag/model-v1.0) of this project.
+The tool makes sure that each file has the correct SHA-256 checksum.
+
 | System  | Cache folder                      |
 | ------- | --------------------------------- |
 | macOS   | `~/Library/Caches/kokoro-cli`     |
@@ -121,6 +124,7 @@ Other languages are not available.
 | `KOKORO_CLI_MODEL_DIR` | Sets the model folder. It has the same function as `--model-dir`.                       |
 | `KOKORO_CLI_PLAYER`    | Sets the command that plays a WAV file. The tool adds the file path as the last argument. |
 | `HF_ENDPOINT`          | Sets a Hugging Face mirror for the download.                                            |
+| `KOKORO_CLI_MIRROR`    | Sets the address of the model copy on GitHub. The value `off` stops this function.      |
 
 ## Use without an internet connection
 

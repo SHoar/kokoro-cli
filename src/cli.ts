@@ -58,6 +58,7 @@ Examples
 
 The model (about 92 MB) is downloaded once on first run and cached in
   ${defaultCacheDir()}
+It comes from Hugging Face, or from GitHub if Hugging Face cannot be reached.
 After that kokoro-cli works offline. Speech is always generated locally.
 `;
 
@@ -252,7 +253,7 @@ function describe(err: unknown, options: SpeakOptions): string {
   if (options.modelDir && /local_files_only|not found locally|Could not locate file/i.test(message)) {
     return `No usable model in ${resolve(options.modelDir)} (expected config.json, tokenizer.json and an onnx/ folder).\n${message}`;
   }
-  if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|(Unauthorized|Forbidden) access|Could not locate file/i.test(message)) {
+  if (/Could not download the model/i.test(message) ? false : /fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|(Unauthorized|Forbidden) access|Could not locate file/i.test(message)) {
     return (
       `Could not download the Kokoro model. An internet connection is needed the first time only; ` +
       `after that kokoro-cli runs offline.\n${message}`
