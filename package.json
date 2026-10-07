@@ -1,0 +1,61 @@
+{
+  "name": "kokoro-cli",
+  "version": "0.2.0",
+  "description": "Changes text into speech on your computer with the Kokoro TTS model: npx kokoro-cli Hello",
+  "keywords": [
+    "kokoro",
+    "tts",
+    "text-to-speech",
+    "speech",
+    "say",
+    "cli",
+    "local",
+    "offline",
+    "onnx"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arsensalmanov/kokoro-cli.git"
+  },
+  "homepage": "https://github.com/arsensalmanov/kokoro-cli#readme",
+  "bugs": {
+    "url": "https://github.com/arsensalmanov/kokoro-cli/issues"
+  },
+  "type": "module",
+  "bin": {
+    "kokoro-cli": "dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/cli.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.5.1",
+    "kokoro-js": "^1.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.3"
+  }
+}
