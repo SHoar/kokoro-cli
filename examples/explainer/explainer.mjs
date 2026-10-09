@@ -17,6 +17,11 @@ mkdirSync(work, { recursive: true });
 const FPS = 30, W = 1920, H = 1080;
 const LEAD = 0.45, TAIL = 0.55, FADE = 0.4, CPS = 24;
 const accent = spec.accent ?? "#7c3aed";
+if (!/^#[0-9a-fA-F]{3,8}$/.test(accent)) throw new Error(`Invalid accent colour: ${accent}`);
+
+// Safe for embedding inside an inline <script>: "<" can't form "</script>" or "<!--".
+const safeJson = (v) =>
+  JSON.stringify(v).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
 
 // ---------- 1. narration: one WAV per scene, real durations drive the timeline ----------
 function envelope(file) {
@@ -94,7 +99,7 @@ li::before{content:"";position:absolute;left:0;top:18px;width:26px;height:26px;b
 <div class="blob" style="width:820px;height:820px;background:#0ea5e9;opacity:.28;left:520px;bottom:-540px"></div></div>
 <div id="fg"><div id="stage"></div><div id="wave"></div><div id="foot"></div></div>
 <script>
-const S = ${JSON.stringify(scenes.map(({ wav, ...s }) => s))}, LEAD = ${LEAD}, FADE = ${FADE}, CPS = ${CPS}, NB = 36;
+const S = ${safeJson(scenes.map(({ wav, ...s }) => s))}, LEAD = ${LEAD}, FADE = ${FADE}, CPS = ${CPS}, NB = 36;
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 const ease = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
 // Colour a shell command: first word, -flags, "strings".
@@ -104,7 +109,7 @@ const code = (s) => esc(s).replace(/(\\/\\/[^\\n]*|#[^\\n]*)|("[^"\\n]*"|'[^'\\n
   (m, com, str, kw) => com ? '<span class="o">' + com + '</span>' : str ? '<span class="s">' + str + '</span>' : '<span class="k">' + kw + '</span>');
 const stage = document.getElementById("stage"), wave = document.getElementById("wave");
 for (let i = 0; i < NB; i++) wave.appendChild(document.createElement("i"));
-document.getElementById("foot").textContent = ${JSON.stringify(spec.footer ?? "")};
+document.getElementById("foot").textContent = ${safeJson(spec.footer ?? "")};
 const els = S.map((s) => { const d = document.createElement("div"); d.className = "scene" + (s.type === "title" || s.type === "end" ? " center" : ""); stage.appendChild(d); return d; });
 const head = (s) => (s.kicker ? '<div class="kicker">' + esc(s.kicker) + '</div>' : "") + '<h2>' + esc(s.title ?? "") + '</h2>' + (s.subtitle ? '<div class="sub">' + esc(s.subtitle) + '</div>' : "");
 const bar = '<div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>';
